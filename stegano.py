@@ -23,12 +23,14 @@ if len(sys.argv) < 2:
 mess_file = open("mess.txt", "r")
 cover_file = open("cover.html", "r")
 help_file = open("help.html", "w")
-detect_file = open("detect.txt", "w")
 
 lines = 0
 spaces = 0
+a_attribute = 0
 for line in cover_file:
     line = re.sub(' +', ' ', line)
+    if line.count("<a ") > 0:
+        a_attribute += 1
     if line.count(' ') > 0:
         spaces += 1
     lines += 1
@@ -55,7 +57,6 @@ if sys.argv[1] == "-e":
             watermark_file.write(cover_file.readline())
     elif sys.argv[2] == "-2":
         help_file = open("help.html", "r")
-        print bit_message
         if len(bit_message) > spaces:
             print "cover file is too short"
             exit()
@@ -73,8 +74,24 @@ if sys.argv[1] == "-e":
         for i in range(line_number, lines):
             watermark_file.write(help_file.readline())
     elif sys.argv[2] == "-3":
-        print "-e -3"
-
+        help_file = open("help.html", "r")
+        if len(bit_message) > a_attribute:
+            print "cover file is too short"
+            exit()
+        for i in range(lines):
+            line = help_file.readline()
+            if line.count("<a ") > 0 and line_number < len(bit_message) - 1:
+                if bit_message[line_number] == 1:
+                    line = re.sub("<a ", "<a style=\"margin-botom: 0cm;\"", line, 1)
+                    watermark_file.write(line)
+                else:
+                    watermark_file.write(line)
+                line_number += 1
+            else:
+                watermark_file.write(line)
+        for i in range(line_number, lines):
+            watermark_file.write(help_file.readline())
+        print bit_message
     elif sys.argv[2] == "-4":
         print "-e -4"
 
@@ -82,6 +99,7 @@ if sys.argv[1] == "-e":
         print "Unknown second parameter"
         exit()
 elif sys.argv[1] == "-d":
+    detect_file = open("detect.txt", "w")
     watermark_file = open("watermark.html", "r")
     if sys.argv[2] == "-1":
         bit_message = []
@@ -92,7 +110,7 @@ elif sys.argv[1] == "-d":
                     bit_message.append(1)
                 else:
                     bit_message.append(0)
-        print from_bits(bit_message)
+        detect_file.write(from_bits(bit_message))
     elif sys.argv[2] == "-2":
         bit_message = []
         for i in range(lines-1):
@@ -102,11 +120,18 @@ elif sys.argv[1] == "-d":
                     bit_message.append(1)
                 else:
                     bit_message.append(0)
-        print from_bits(bit_message)
-
+        detect_file.write(from_bits(bit_message))
     elif sys.argv[2] == "-3":
-        print "-e -3"
-
+        bit_message = []
+        for i in range(lines-1):
+            line = watermark_file.readline()
+            if len(line) > 0 and line.count("<a ") > 0 or line.count("<a style=\"margin-botom: 0cm;\"") > 0:
+                if line.count('<a style=\"margin-botom: 0cm;\"') > 0:
+                    bit_message.append(1)
+                else:
+                    bit_message.append(0)
+        print(from_bits(bit_message))
+        detect_file.write(from_bits(bit_message))
     elif sys.argv[2] == "-4":
         print "-e -4"
 
