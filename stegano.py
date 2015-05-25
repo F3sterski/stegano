@@ -27,10 +27,13 @@ help_file = open("help.html", "w")
 lines = 0
 spaces = 0
 a_attribute = 0
+h3_attribute = 0
 for line in cover_file:
     line = re.sub(' +', ' ', line)
     if line.count("<a ") > 0:
         a_attribute += 1
+    if line.count("</h3>") > 0:
+        h3_attribute += 1
     if line.count(' ') > 0:
         spaces += 1
     lines += 1
@@ -93,8 +96,24 @@ if sys.argv[1] == "-e":
             watermark_file.write(help_file.readline())
         print bit_message
     elif sys.argv[2] == "-4":
-        print "-e -4"
-
+        help_file = open("help.html", "r")
+        if len(bit_message) > h3_attribute:
+            print "cover file is too short"
+            exit()
+        for i in range(lines):
+            line = help_file.readline()
+            if line.count("</h3>") > 0 and line_number < len(bit_message) - 1:
+                if bit_message[line_number] == 1:
+                    line = re.sub("</h3>", "</h3><h3></h3>", line, 1)
+                    watermark_file.write(line)
+                else:
+                    watermark_file.write(line)
+                line_number += 1
+            else:
+                watermark_file.write(line)
+        for i in range(line_number, lines):
+            watermark_file.write(help_file.readline())
+        print bit_message
     else:
         print "Unknown second parameter"
         exit()
@@ -133,8 +152,15 @@ elif sys.argv[1] == "-d":
         print(from_bits(bit_message))
         detect_file.write(from_bits(bit_message))
     elif sys.argv[2] == "-4":
-        print "-e -4"
-
+        bit_message = []
+        for i in range(lines):
+            line = watermark_file.readline()
+            if len(line) > 0 and line.count("</h3>") > 0 or line.count("</h3><h3></h3>") > 0:
+                if line.count('</h3><h3></h3>') > 0:
+                    bit_message.append(1)
+                else:
+                    bit_message.append(0)
+        detect_file.write(from_bits(bit_message))
     else:
         print "Unknown second parameter"
         exit()
