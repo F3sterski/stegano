@@ -38,6 +38,7 @@ cover_file.close()
 cover_file = open("cover.html", "r")
 
 if sys.argv[1] == "-e":
+    line_number = 0;
     watermark_file = open("watermark.html", "w")
     bit_message = to_bits(mess_file.readline())
     if sys.argv[2] == "-1":
@@ -58,23 +59,19 @@ if sys.argv[1] == "-e":
         if len(bit_message) > spaces:
             print "cover file is too short"
             exit()
-        for i in range(len(bit_message)):
+        for i in range(lines):
             line = help_file.readline()
-            if line.count(' ') > 0:
-
-                if bit_message[i] == 1:
-                    print line
+            if line.count(' ') > 0 and line_number < len(bit_message) - 1:
+                if bit_message[line_number] == 1:
                     line = re.sub(" ", "  ", line, 1)
-                    print line
                     watermark_file.write(line)
                 else:
                     watermark_file.write(line)
+                line_number += 1
             else:
-                watermark_file.write(help_file.readline())
-                i -= 1
-        for i in range(len(bit_message), lines):
+                watermark_file.write(line)
+        for i in range(line_number, lines):
             watermark_file.write(help_file.readline())
-
     elif sys.argv[2] == "-3":
         print "-e -3"
 
@@ -100,8 +97,8 @@ elif sys.argv[1] == "-d":
         bit_message = []
         for i in range(lines-1):
             line = watermark_file.readline()
-            if len(line) > 0:
-                if line.count('  ') == 1:
+            if len(line) > 0 and line.count('  ') > 0 or line.count(' ') > 0:
+                if line.count('  ') > 0:
                     bit_message.append(1)
                 else:
                     bit_message.append(0)
